@@ -115,6 +115,8 @@ func (r *Runner) Start() {
 
 	var exitCh <-chan int
 
+	timeout := time.After(30 * time.Second)
+
 	// skip the watch phase and spawn child process immediately
 	// if there are no dependencies ie. prefix/secrets found
 	if len(r.dependencies) == 0 {
@@ -179,6 +181,22 @@ func (r *Runner) Start() {
 				r.ErrCh <- err
 				return
 			}
+
+		NOTIMEOUT:
+			// TODO: this handles the case where Vault is just not responding to our
+			// requests, and the underlying transport has exceeded the maximum
+			// retries. Without this, envconsul hangs with no activity, which is
+			// particularly bad for our monitoring purposes.
+			for {
+				select {
+				case <-timeout:
+					log.Printf("[ERR] failed to satisfy dependencies within timeout, failing")
+					panic("timed out waiting for dependencies")
+				default:
+					break NOTIMEOUT
+				}
+			}
+
 		case code := <-exitCh:
 			r.ExitCh <- code
 		case <-r.DoneCh:
