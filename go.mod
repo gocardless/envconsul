@@ -8,5 +8,5 @@ require (
 	github.com/hashicorp/hcl v1.0.0
 	github.com/mattn/go-shellwords v1.0.5
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 )
